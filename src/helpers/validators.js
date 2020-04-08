@@ -12,8 +12,24 @@
  *
  * Если какие либо функции написаны руками (без использования библиотек) это не является ошибкой
  */
-import { __, allPass, compose, converge, curry, equals, filter, gte, keys, length, lte, prop } from 'ramda';
+import {
+	__,
+	allPass,
+	compose,
+	converge,
+	curry,
+	equals,
+	filter,
+	gte,
+	includes,
+	keys,
+	length,
+	prop
+} from 'ramda';
+
 import { COLORS, SHAPES } from '../constants';
+
+const arrayOf = (...args) => args;
 
 const equalsRed = equals(COLORS.RED);
 const equalsBlue = equals(COLORS.BLUE);
@@ -82,7 +98,19 @@ export const validateFieldN4 = (prop) => {
 };
 
 // 5. Три фигуры одного любого цвета кроме белого.
-export const validateFieldN5 = () => false;
+export const validateFieldN5 = (prop) => {
+	const includeThree = includes(3);
+
+	const colorArray = converge(
+		arrayOf,
+		[redCount, blueCount, orangeCount, greenCount]
+	);
+
+	return compose(
+		includeThree,
+		colorArray
+	)(prop);
+};
 
 // 6. Две зеленые фигуры (одна из них треугольник), еще одна любая красная.
 export const validateFieldN6 = () => false;
