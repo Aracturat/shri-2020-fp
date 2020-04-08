@@ -1,6 +1,6 @@
 /**
  * @file Домашка по FP ч. 1
- * 
+ *
  * Основная задача — написать самому, или найти в FP библиотеках функции anyPass/allPass
  * Эти функции/их аналоги есть и в ramda и в lodash
  *
@@ -12,14 +12,34 @@
  *
  * Если какие либо функции написаны руками (без использования библиотек) это не является ошибкой
  */
+import { allPass, equals, prop, compose } from 'ramda';
+import { COLORS, SHAPES } from '../constants';
+
+const equalsRed = equals(COLORS.RED);
+const equalsBlue = equals(COLORS.BLUE);
+const equalsOrange = equals(COLORS.ORANGE);
+const equalsGreen = equals(COLORS.GREEN);
+const equalsWhite = equals(COLORS.WHITE);
+
+const propStar = prop(SHAPES.STAR);
+const propSquare = prop(SHAPES.SQUARE);
+const propTriangle = prop(SHAPES.TRIANGLE);
+const propCircle = prop(SHAPES.CIRCLE);
+
 
 // 1. Красная звезда, зеленый квадрат, все остальные белые.
-export const validateFieldN1 = ({star, square, triangle, circle}) => {
-    if (triangle !== 'white' || circle !== 'white') {
-        return false;
-    }
+export const validateFieldN1 = (props) => {
+	const starIsRed = compose(equalsRed, propStar);
+	const squareIsGreen = compose(equalsGreen, propSquare);
+	const triangleIsWhite = compose(equalsWhite, propTriangle);
+	const circleIsWhite = compose(equalsWhite, propCircle);
 
-    return star === 'red' && square === 'green';
+	return allPass([
+		starIsRed,
+		squareIsGreen,
+		triangleIsWhite,
+		circleIsWhite
+	])(props);
 };
 
 // 2. Как минимум две фигуры зеленые.
