@@ -12,7 +12,7 @@
  *
  * Если какие либо функции написаны руками (без использования библиотек) это не является ошибкой
  */
-import { allPass, equals, prop, compose } from 'ramda';
+import { __, allPass, compose, converge, curry, equals, filter, gte, keys, length, lte, prop } from 'ramda';
 import { COLORS, SHAPES } from '../constants';
 
 const equalsRed = equals(COLORS.RED);
@@ -26,6 +26,14 @@ const propSquare = prop(SHAPES.SQUARE);
 const propTriangle = prop(SHAPES.TRIANGLE);
 const propCircle = prop(SHAPES.CIRCLE);
 
+const countOfKeys = compose(length, keys);
+const countOfShapes = curry(compose(countOfKeys, filter));
+
+const redCount = countOfShapes(equalsRed);
+const blueCount = countOfShapes(equalsBlue);
+const orangeCount = countOfShapes(equalsOrange);
+const greenCount = countOfShapes(equalsGreen);
+const whiteCount = countOfShapes(equalsWhite);
 
 // 1. Красная звезда, зеленый квадрат, все остальные белые.
 export const validateFieldN1 = (props) => {
@@ -43,13 +51,35 @@ export const validateFieldN1 = (props) => {
 };
 
 // 2. Как минимум две фигуры зеленые.
-export const validateFieldN2 = () => false;
+export const validateFieldN2 = (prop) => {
+	const atLeastTwo = gte(__, 2);
+
+	return compose(
+		atLeastTwo,
+		greenCount
+	)(prop)
+};
 
 // 3. Количество красных фигур равно кол-ву синих.
-export const validateFieldN3 = () => false;
+export const validateFieldN3 = (prop) => {
+	return converge(
+		equals,
+		[blueCount, redCount]
+	)(prop);
+};
 
 // 4. Синий круг, красная звезда, оранжевый квадрат
-export const validateFieldN4 = () => false;
+export const validateFieldN4 = (prop) => {
+	const circleIsBlue = compose(equalsBlue, propCircle);
+	const starIsRed = compose(equalsRed, propStar);
+	const squareIsOrange = compose(equalsOrange, propSquare);
+
+	return allPass([
+		circleIsBlue,
+		starIsRed,
+		squareIsOrange
+	])(prop);
+};
 
 // 5. Три фигуры одного любого цвета кроме белого.
 export const validateFieldN5 = () => false;
