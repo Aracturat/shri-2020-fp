@@ -24,12 +24,15 @@ import {
 	includes,
 	keys,
 	length,
-	prop
+	not,
+	prop,
+	identity,
+	unapply
 } from 'ramda';
 
 import { COLORS, SHAPES } from '../constants';
 
-const arrayOf = (...args) => args;
+const arrayOf = unapply(identity);
 
 const equalsRed = equals(COLORS.RED);
 const equalsBlue = equals(COLORS.BLUE);
@@ -49,7 +52,6 @@ const redCount = countOfShapes(equalsRed);
 const blueCount = countOfShapes(equalsBlue);
 const orangeCount = countOfShapes(equalsOrange);
 const greenCount = countOfShapes(equalsGreen);
-const whiteCount = countOfShapes(equalsWhite);
 
 // 1. Красная звезда, зеленый квадрат, все остальные белые.
 export const validateFieldN1 = (props) => {
@@ -113,16 +115,63 @@ export const validateFieldN5 = (prop) => {
 };
 
 // 6. Две зеленые фигуры (одна из них треугольник), еще одна любая красная.
-export const validateFieldN6 = () => false;
+export const validateFieldN6 = (prop) => {
+	const triangleIsGreen = compose(equalsGreen, propTriangle);
+	const equalsOne = equals(1);
+	const equalsTwo = equals(2);
+
+	const twoGreenShapes = compose(equalsTwo, greenCount);
+	const oneRedShape = compose(equalsOne, redCount);
+
+	return allPass([
+		triangleIsGreen,
+		twoGreenShapes,
+		oneRedShape
+	])(prop);
+};
 
 // 7. Все фигуры оранжевые.
-export const validateFieldN7 = () => false;
+export const validateFieldN7 = (prop) => {
+	const equalsFor = equals(4);
+
+	return compose(
+		equalsFor,
+		orangeCount
+	)(prop)
+};
 
 // 8. Не красная и не белая звезда.
-export const validateFieldN8 = () => false;
+export const validateFieldN8 = (prop) => {
+	const starIsNotRed = compose(not, equalsRed, propStar);
+	const starIsNotWhite = compose(not, equalsWhite, propStar);
+
+	return allPass([
+		starIsNotRed,
+		starIsNotWhite
+	])(prop)
+};
 
 // 9. Все фигуры зеленые.
-export const validateFieldN9 = () => false;
+export const validateFieldN9 = (prop) => {
+	const equalsFor = equals(4);
+
+	return compose(
+		equalsFor,
+		greenCount
+	)(prop)
+};
 
 // 10. Треугольник и квадрат одного цвета (не белого)
-export const validateFieldN10 = () => false;
+export const validateFieldN10 = (prop) => {
+	const triangleAndSquareHasSameColor = converge(
+		equals,
+		[propSquare, propTriangle]
+	);
+
+	const triangleNotWhite = compose(not, equalsWhite, propTriangle)
+
+	return allPass([
+		triangleAndSquareHasSameColor,
+		triangleNotWhite
+	])(prop);
+};
