@@ -15,37 +15,76 @@
  * Ответ будет приходить в поле {result}
  */
 import Api from '../tools/api';
+import { allPass, andThen, compose, gt, ifElse, length, lt, otherwise, pipe, prop, tap, test } from 'ramda';
 
 const api = new Api();
 
-/**
- * Я – пример, удали меня
- */
-const wait = time => new Promise(resolve => {
-    setTimeout(resolve, time);
-})
+const processSequence = ({ value, writeLog, handleSuccess, handleError }) => {
+	const isValid = allPass([
+		compose(gt(10), length),
+		compose(lt(2), length),
+		test(/^(\d+\.)?\d+$/)
+	]);
 
-const processSequence = ({value, writeLog, handleSuccess, handleError}) => {
-    /**
-     * Я – пример, удали меня
-     */
-    writeLog(value);
+	const toNumber = value => Number(value);
+	const toNearest = value => Math.round(value);
+	const square = value => value * value;
+	const mod3 = value => value % 3;
 
-    api.get('https://api.tech/numbers/base', {from: 2, to: 10, number: '01011010101'}).then(({result}) => {
-        writeLog(result);
-    });
+	const getAnimal = id => api.get(`https://animals.tech/${id}`, {});
+	const convert = number => api.get('https://api.tech/numbers/base', { from: 10, to: 2, number });
 
-    wait(2500).then(() => {
-        writeLog('SecondLog')
+	const runSquare = pipe(
+		square,
+		tap(writeLog)
+	);
 
-        return wait(1500);
-    }).then(() => {
-        writeLog('ThirdLog');
+	const runGetAnimal = pipe(
+		mod3,
+		tap(writeLog),
+		getAnimal,
+		andThen(
+			pipe(
+				prop('result'),
+				tap(handleSuccess)
+			)
+		),
+		otherwise(tap(handleError))
+	);
 
-        return wait(400);
-    }).then(() => {
-        handleSuccess('Done');
-    });
-}
+	const runConvert = pipe(
+		convert,
+		andThen(
+			pipe(
+				prop('result'),
+				tap(writeLog),
+				length,
+				tap(writeLog),
+				runSquare,
+				runGetAnimal
+			)
+		),
+		otherwise(tap(handleError)),
+	);
+
+
+	const runIfValid = pipe(
+		toNumber,
+		toNearest,
+		tap(writeLog),
+		runConvert
+	);
+
+	const showValidError = value => handleError('ValidationError');
+
+	return pipe(
+		tap(writeLog),
+		ifElse(
+			isValid,
+			runIfValid,
+			showValidError
+		)
+	)(value);
+};
 
 export default processSequence;
